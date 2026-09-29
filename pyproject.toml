@@ -3,27 +3,46 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "partner-signal"
-version = "0.1.0"
-description = "A fictional partner opportunity and follow-up workspace"
+name = "partnersignal"
+version = "2.0.0"
+description = "Partner prospecting, qualification and follow-up workspace for professional-services teams (fictional data)"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
   "fastapi>=0.115",
-  "uvicorn>=0.30",
+  "uvicorn[standard]>=0.30",
+  "sqlalchemy>=2.0",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "anthropic>=1.0",
 ]
 
 [project.optional-dependencies]
-dev = ["httpx>=0.27", "pytest>=8.0", "ruff>=0.6"]
-
-[tool.pytest.ini_options]
-pythonpath = ["src"]
-testpaths = ["tests"]
-
-[tool.ruff]
-line-length = 100
+dev = ["httpx>=0.27", "pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6", "mypy>=1.10"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-partnersignal = ["web/*.html", "web/*.js", "web/*.css"]
+partnersignal = ["static/**/*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["B008"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+check_untyped_defs = false
+
+[tool.ruff.lint.per-file-ignores]
+"src/partnersignal/seed.py" = ["E501"]
