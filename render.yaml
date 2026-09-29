@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: partner-signal
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
