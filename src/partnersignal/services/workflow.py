@@ -39,7 +39,7 @@ def last_touches(session: Session) -> dict[int, date]:
         .where(Activity.opportunity_id.is_not(None))
         .group_by(Activity.opportunity_id)
     )
-    return {opp_id: moment.date() for opp_id, moment in rows}
+    return {opp_id: moment.date() for opp_id, moment in rows if opp_id is not None}
 
 
 def partner_last_touch(session: Session) -> dict[str, date]:
