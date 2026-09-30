@@ -7,7 +7,7 @@ interface Step {
   target: string; // CSS selector to highlight
   title: string;
   body: string;
-  job: string; // the responsibility from the job description this step shows
+  area: string; // the part of partner-services work this step covers
 }
 
 let topOpportunity: number | null = null;
@@ -21,49 +21,49 @@ const STEPS: Step[] = [
     target: ".queue-row",
     title: "Start the day knowing who to call",
     body: "Every conversation that needs attention is ranked, and each row says why: an overdue follow-up, a customer deadline, a fresh lead.",
-    job: "Track activity and follow up with discipline",
+    area: "Follow-up discipline",
   },
   {
     path: "/signals",
     target: ".signal-card",
     title: "Find new business from real signals",
     body: "Renewals, products reaching end of support, and services a partner has never sold. Each card is a concrete reason to reach out, with a suggested service.",
-    job: "Use data to identify prospects",
+    area: "Prospecting",
   },
   {
     path: "/capture?sample=clinic&run=1",
     target: ".review",
     title: "Turn a phone call into a qualified opportunity",
     body: "Rough notes go in; the AI assistant returns the customer's problem, the best-fit service and how qualified the deal is, quoting the notes as evidence. A person reviews before anything is saved.",
-    job: "Ask questions, understand needs, qualify opportunities",
+    area: "Discovery and qualification",
   },
   {
     path: () => (topOpportunity ? `/opportunities/${topOpportunity}` : "/pipeline"),
     target: ".breakdown",
     title: "See exactly why a deal is a priority",
     body: "The score adds up four things anyone can check: service fit, qualification, momentum and urgency. It explains itself instead of hiding behind a number.",
-    job: "Make informed business development decisions",
+    area: "Prioritizing with evidence",
   },
   {
     path: () => (topOpportunity ? `/opportunities/${topOpportunity}` : "/pipeline"),
     target: ".specialists",
     title: "Bring in the right specialist",
     body: "One click routes the deal to the least-busy technical specialist and sends a written handoff brief, so nobody starts from zero.",
-    job: "Work with sales and technical specialists",
+    area: "Specialist collaboration",
   },
   {
     path: "/pipeline",
     target: ".board",
     title: "Keep the pipeline honest",
     body: "Drag a card forward and the system checks the evidence first. A deal can't be called qualified until the need, budget or timeline is actually known.",
-    job: "Maintain an accurate pipeline",
+    area: "Pipeline accuracy",
   },
   {
     path: "/reports",
     target: ".report-stats",
     title: "Report what a manager asks for",
     body: "Open pipeline, win rate, time to close and follow-through by week, plus a CRM-ready export.",
-    job: "Track activity and results",
+    area: "Reporting",
   },
 ];
 
@@ -153,7 +153,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
                   ×
                 </button>
               </div>
-              <p className="tour-job">Job responsibility: {STEPS[index].job}</p>
+              <p className="tour-job">{STEPS[index].area}</p>
               <h2 id="tour-title">{STEPS[index].title}</h2>
               <p>{STEPS[index].body}</p>
               <div className="tour-progress" aria-hidden>

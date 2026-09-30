@@ -34,9 +34,8 @@ export function Welcome({ topOpportunityId }: { topOpportunityId: number | null 
       <div className="welcome-text">
         <h2 id="welcome-title">Welcome to PartnerSignal</h2>
         <p>
-          A working demo of how a professional-services associate could run the day: find the right reseller partner to
-          call, qualify the opportunity, bring in the right specialist, and follow up on time. Every company and person is
-          fictional.
+          A workspace for selling IT services through reseller partners: find the right partner to call, qualify
+          the opportunity, bring in the right specialist, and follow up on time. Every company and person is fictional.
         </p>
         <p className="welcome-links">
           <button className="button primary" onClick={tour.start}>

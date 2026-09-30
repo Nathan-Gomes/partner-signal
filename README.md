@@ -13,7 +13,7 @@ the pipeline honest with follow-up discipline and reporting.
 
 ## What it does
 
-| Job to be done | How PartnerSignal handles it |
+| The work | How PartnerSignal handles it |
 | --- | --- |
 | **Find the right partner to call** | A signal feed built from renewal dates, end-of-support dates, purchase patterns and cloud-marketplace activity, plus a whitespace map showing where a partner sells product but attaches no services. |
 | **Understand the customer's problem** | *Capture a call* turns rough notes into a structured record with AI: challenges, likely practice and service, BANT qualification, risks and follow-up questions. Every judgement quotes the notes, highlighted in place. |
