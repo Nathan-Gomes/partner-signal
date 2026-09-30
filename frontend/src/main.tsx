@@ -3,6 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { TourProvider } from "./components/Tour";
 import { ToastProvider } from "./components/ui";
 import { Capture } from "./pages/Capture";
 import { Opportunity } from "./pages/Opportunity";
@@ -34,6 +35,7 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <BrowserRouter>
+          <TourProvider>
           <Routes>
             <Route element={<Layout />}>
               <Route index element={<Today />} />
@@ -48,6 +50,7 @@ createRoot(document.getElementById("root")!).render(
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
+          </TourProvider>
         </BrowserRouter>
       </ToastProvider>
     </QueryClientProvider>

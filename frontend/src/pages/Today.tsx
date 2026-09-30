@@ -5,6 +5,7 @@ import { api, type QueueItem, type TodayView } from "../api";
 import { type ComposerTarget, OutreachComposer } from "../components/OutreachComposer";
 import { BandTag, DueTag, ErrorState, Loading, PageHeader, PracticeTag } from "../components/ui";
 import { Welcome } from "../components/Welcome";
+import { rememberTopOpportunity } from "../components/Tour";
 import { cadShort, parseDay, relativeTime } from "../format";
 
 const KIND_HINT: Record<QueueItem["kind"], string> = {
@@ -21,6 +22,7 @@ export function Today() {
   if (error || !data) return <ErrorState error={error} />;
 
   const { kpis } = data;
+  rememberTopOpportunity(data.queue.find((q) => q.opportunity_id)?.opportunity_id ?? null);
   const date = parseDay(data.date).toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" });
   const progress = Math.min(1, kpis.touches_this_week / kpis.weekly_touch_goal);
 

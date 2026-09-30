@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useTour } from "./Tour";
 
 const KEY = "ps-welcome-dismissed";
 export const CASE_STUDY = "https://www.nathan-gomes.com/Project-PartnerSignal.dc.html";
@@ -15,6 +16,7 @@ function dismissedBefore(): boolean {
 export function Welcome({ topOpportunityId }: { topOpportunityId: number | null }) {
   const [params, setParams] = useSearchParams();
   const [hidden, setHidden] = useState(() => dismissedBefore() && params.get("intro") !== "1");
+  const tour = useTour();
   if (hidden) return null;
 
   function dismiss() {
@@ -37,6 +39,9 @@ export function Welcome({ topOpportunityId }: { topOpportunityId: number | null 
           fictional.
         </p>
         <p className="welcome-links">
+          <button className="button primary" onClick={tour.start}>
+            Take the 2-minute tour
+          </button>
           <a href={CASE_STUDY} target="_blank" rel="noreferrer">
             Read the case study
           </a>

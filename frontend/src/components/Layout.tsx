@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { useTour } from "./Tour";
 import { CASE_STUDY } from "./Welcome";
 import { api, type Health, type TodayView } from "../api";
 import { useToast } from "./ui";
@@ -20,6 +21,7 @@ export function Layout() {
   const location = useLocation();
   const client = useQueryClient();
   const toast = useToast();
+  const tour = useTour();
   const health = useQuery({ queryKey: ["health"], queryFn: () => api.get<Health>("/api/health") });
   const today = useQuery({ queryKey: ["today"], queryFn: () => api.get<TodayView>("/api/today") });
   const due = today.data ? today.data.kpis.due_today + today.data.kpis.overdue : null;
@@ -69,6 +71,15 @@ export function Layout() {
               : "Connecting…"}
           </p>
           <p className="fine">Fictional demo data. Drafts are never sent automatically.</p>
+          <button
+            className="side-tour"
+            onClick={() => {
+              setOpen(false);
+              tour.start();
+            }}
+          >
+            Take the 2-minute tour
+          </button>
           <a className="side-link" href={CASE_STUDY} target="_blank" rel="noreferrer">
             About this project
           </a>

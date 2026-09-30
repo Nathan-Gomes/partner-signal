@@ -1,24 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, type Bant, type EngineMeta, type Extraction, type Meta, type PartnerSummary } from "../api";
 import { EngineNote, PageHeader, PracticeTag } from "../components/ui";
 import { BANT_LABEL } from "../format";
 
-const SAMPLES: { partner: string; label: string; notes: string }[] = [
+const SAMPLES: { key: string; partner: string; label: string; notes: string }[] = [
   {
+    key: "clinic",
     partner: "northstar",
     label: "Clinic ransomware worry",
     notes:
       "Call with Maya at Northstar. Their client Lakeview Family Clinics had a phishing scare last month and the insurer now wants proof of tested backups before the renewal in November.\nNobody has done a restore test in two years. The clinic's operations director signs off on IT spend, and Maya thinks there's roughly $15k set aside in this year's budget.\nThey're also curious whether Copilot could help with patient intake forms, but not sure it's safe with health data.\nThey got another quote from a local provider, but it was just for backup software.",
   },
   {
+    key: "wifi",
     partner: "prairie",
     label: "Warehouse Wi-Fi",
     notes:
       "Spoke with Avery. Their customer Northern Grain Co-op is opening two new warehouse sites and the handheld scanners keep dropping their Wi-Fi connection in cold storage. Orders are getting mis-picked.\nThe IT manager is our contact; the GM approves anything over $10k. No budget number yet. They want it sorted before the spring intake.",
   },
   {
+    key: "msp",
     partner: "granite",
     label: "AI offer for an MSP",
     notes:
@@ -44,15 +47,17 @@ export function Capture() {
   const [serviceKey, setServiceKey] = useState("");
   const [customer, setCustomer] = useState("");
 
+  function onAnalyzed(data: Response) {
+    setReview(data);
+    const b = data.result.bant;
+    setBant({ budget: b.budget.level, authority: b.authority.level, need: b.need.level, timeline: b.timeline.level });
+    setServiceKey(data.result.practices[0]?.service_key ?? "");
+    setCustomer(data.result.end_customer);
+  }
+
   const analyze = useMutation({
     mutationFn: () => api.post<Response>("/api/ai/discovery", { partner_id: partnerId, notes, engine }),
-    onSuccess: (data) => {
-      setReview(data);
-      const b = data.result.bant;
-      setBant({ budget: b.budget.level, authority: b.authority.level, need: b.need.level, timeline: b.timeline.level });
-      setServiceKey(data.result.practices[0]?.service_key ?? "");
-      setCustomer(data.result.end_customer);
-    },
+    onSuccess: (data) => onAnalyzed(data),
   });
   const create = useMutation({
     mutationFn: () =>
@@ -71,6 +76,24 @@ export function Capture() {
       navigate(`/opportunities/${data.opportunity_id}`);
     },
   });
+
+  // ?sample=clinic&run=1 loads a sample and structures it (used by the guided tour).
+  const [params] = useSearchParams();
+  const autoRan = useRef("");
+  useEffect(() => {
+    const sample = SAMPLES.find((s) => s.key === params.get("sample"));
+    if (!sample || autoRan.current === sample.key) return;
+    autoRan.current = sample.key;
+    setPartnerId(sample.partner);
+    setNotes(sample.notes);
+    setReview(null);
+    if (params.get("run") === "1") {
+      api
+        .post<Response>("/api/ai/discovery", { partner_id: sample.partner, notes: sample.notes, engine: "auto" })
+        .then(onAnalyzed);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params]);
 
   const quotes = useMemo(() => {
     if (!review) return [];

@@ -7,7 +7,7 @@ distributor. It finds reseller partners worth calling, turns call notes into a q
 routes the work to the right technical specialist, drafts outreach for a person to review, and keeps
 the pipeline honest with follow-up discipline and reporting.
 
-**Live demo:** https://partner-signal-arm6.onrender.com (free instance; allow ~30 seconds to wake up)
+**Live demo:** https://partner-signal-arm6.onrender.com. **Guided tour (2 minutes):** https://partner-signal-arm6.onrender.com/?tour=1
 
 ![Today's priority queue](docs/assets/today.png)
 
