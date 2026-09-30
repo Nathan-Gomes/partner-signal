@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from . import clock
 from .ai.service import Assistant
 from .api.routes import router
 from .config import get_settings
@@ -27,7 +29,9 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
     with SessionLocal() as session:
         if settings.reseed_on_start or session.query(Partner).count() == 0:
-            seed(session)
+            seed(session, clock.today())
+    app.state.seeded_on = clock.today()
+    app.state.seed_lock = threading.Lock()
     app.state.assistant = Assistant(settings)
     yield
 
@@ -59,7 +63,8 @@ async def security_headers(request: Request, call_next):
 def reset() -> dict:
     """Restore the fictional demo scenario."""
     with SessionLocal() as session:
-        seed(session)
+        seed(session, clock.today())
+    app.state.seeded_on = clock.today()
     return {"status": "reset"}
 
 

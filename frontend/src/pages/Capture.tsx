@@ -16,7 +16,7 @@ const SAMPLES: { partner: string; label: string; notes: string }[] = [
     partner: "prairie",
     label: "Warehouse Wi-Fi",
     notes:
-      "Spoke with Avery. Their customer Northern Grain Co-op is opening two new warehouse sites and the handheld scanners keep dropping connection in cold storage. Orders are getting mis-picked.\nThe IT manager is our contact; the GM approves anything over $10k. No budget number yet. They want it sorted before the spring intake.",
+      "Spoke with Avery. Their customer Northern Grain Co-op is opening two new warehouse sites and the handheld scanners keep dropping their Wi-Fi connection in cold storage. Orders are getting mis-picked.\nThe IT manager is our contact; the GM approves anything over $10k. No budget number yet. They want it sorted before the spring intake.",
   },
   {
     partner: "granite",

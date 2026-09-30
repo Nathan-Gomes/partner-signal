@@ -8,6 +8,7 @@ from datetime import date, datetime, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
+from .. import clock
 from ..catalog import (
     BANT_QUESTIONS,
     OPEN_STAGES,
@@ -17,6 +18,7 @@ from ..catalog import (
     STAGE_CADENCE,
     STAGE_NAMES,
     STAGE_PROBABILITY,
+    inline,
 )
 from ..models import Activity, Draft, Opportunity, Partner, Signal, Specialist
 from .scoring import Priority, bant_score, check_stage_gate, priority
@@ -207,7 +209,7 @@ def today_view(session: Session, today: date) -> dict:
                 "partner_id": signal.partner_id,
                 "opportunity_id": None,
                 "signal_id": signal.id,
-                "next_step": f"Introduce the {SERVICES_BY_KEY[signal.service_key].name.lower()}",
+                "next_step": f"Introduce the {inline(SERVICES_BY_KEY[signal.service_key].name)}",
                 "due": None,
                 "stage": "Signal",
                 "reasons": reasons,
@@ -394,7 +396,7 @@ def convert_signal(session: Session, signal_id: int, today: date, end_customer: 
         service_key=signal.service_key,
         stage="Prospect",
         value=service.typical_value,
-        next_step=f"Introduce the {service.name.lower()} to {signal.partner.contact_name.split()[0]}",
+        next_step=f"Introduce the {inline(service.name)} to {signal.partner.contact_name.split()[0]}",
         next_step_due=today,
         created_on=today,
         stage_changed_on=today,
@@ -408,7 +410,7 @@ def convert_signal(session: Session, signal_id: int, today: date, end_customer: 
             opportunity_id=opp.id,
             kind="note",
             outcome="",
-            occurred_at=datetime.now(),
+            occurred_at=clock.now(),
             summary=f"Opportunity opened from signal: {signal.title}",
         )
     )
@@ -556,7 +558,7 @@ def change_stage(session: Session, opp_id: int, stage: str, today: date, reason:
             opportunity_id=opp.id,
             kind="stage",
             outcome=stage.lower(),
-            occurred_at=datetime.now(),
+            occurred_at=clock.now(),
             summary=f"Stage moved {previous} → {stage}" + (f": {reason}" if reason else ""),
         )
     )
@@ -576,7 +578,7 @@ def assign_specialist(session: Session, opp_id: int, specialist_id: str) -> Oppo
             opportunity_id=opp.id,
             kind="handoff",
             outcome="sent",
-            occurred_at=datetime.now(),
+            occurred_at=clock.now(),
             summary=f"Handoff brief sent to {specialist.name} ({specialist.title}).",
         )
     )
@@ -602,7 +604,7 @@ def log_activity(
         kind=kind,
         summary=summary,
         outcome=outcome,
-        occurred_at=datetime.now(),
+        occurred_at=clock.now(),
     )
     session.add(activity)
     if opportunity_id is not None:
@@ -647,7 +649,7 @@ def create_opportunity(session: Session, today: date, data: dict, notes: str = "
             opportunity_id=opp.id,
             kind="call",
             outcome="connected",
-            occurred_at=datetime.now(),
+            occurred_at=clock.now(),
             summary="Discovery call captured" + (f": {notes[:220]}" if notes else "."),
         )
     )

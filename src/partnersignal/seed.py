@@ -13,7 +13,8 @@ from datetime import date, datetime, time, timedelta
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from .catalog import SERVICES_BY_KEY
+from . import clock
+from .catalog import SERVICES_BY_KEY, inline
 from .db import Base
 from .models import Activity, Draft, Opportunity, Partner, Signal, Specialist
 
@@ -378,7 +379,7 @@ def _ws2016_deadline(today: date) -> date:
 
 def seed(session: Session, today: date | None = None) -> None:
     """Wipe and repopulate the database with the fictional scenario."""
-    today = today or date.today()
+    today = today or clock.today()
     rng = random.Random(468)
     engine = session.get_bind()
     Base.metadata.create_all(engine)
@@ -546,7 +547,7 @@ def _seed_touches(session, rng, opp, partner, created, changed, closed, at) -> N
                 kind=kind,
                 outcome=outcome,
                 occurred_at=at(min(offset, 0), rng.randint(9, 16)),
-                summary=text.format(contact=first, customer=opp.end_customer, topic=service.lower(), service=service),
+                summary=text.format(contact=first, customer=opp.end_customer, topic=inline(service), service=service),
             )
         )
     if opp.specialist_id:

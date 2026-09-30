@@ -97,7 +97,9 @@ def priority(opp: Opportunity, today: date, last_touch: date | None, signal: Sig
         momentum.reasons.append("no logged touches yet")
     else:
         momentum.points = 20 if gap <= 3 else 15 if gap <= 7 else 8 if gap <= 14 else 2
-        momentum.reasons.append(f"last touch {gap} day{'s' if gap != 1 else ''} ago")
+        momentum.reasons.append(
+            "last touch today" if gap == 0 else f"last touch {gap} day{'s' if gap != 1 else ''} ago"
+        )
     in_stage = (today - opp.stage_changed_on).days
     if opp.stage in STALL_DAYS and in_stage > STALL_DAYS[opp.stage]:
         momentum.points = max(0, momentum.points - 6)

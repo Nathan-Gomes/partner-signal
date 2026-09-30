@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from ..catalog import BANT_QUESTIONS, PLAYBOOKS, PRACTICES, SERVICES_BY_KEY
+from ..catalog import BANT_QUESTIONS, PLAYBOOKS, PRACTICES, SERVICES_BY_KEY, inline
 from .schemas import (
     AuthorityItem,
     Bant,
@@ -95,6 +95,10 @@ BANT_RULES: dict[str, list[tuple[str, str]]] = {
         ("6_plus_months", r"next (fiscal )?year|12 months|later (this|next) year|no rush|eventually|someday"),
     ],
 }
+NEGATIONS = {
+    "budget": r"\bno budget\b|\bno (?:budget |dollar )?(?:number|figure|amount)\b|not (?:yet )?budgeted|"
+    r"budget (?:is|isn't|is not) (?:not )?(?:set|approved|confirmed)|without (?:a )?budget",
+}
 RISK_RULES: list[tuple[str, str]] = [
     (
         r"incumbent|another (vendor|provider|partner)|competitor|other quote|shopping around",
@@ -140,12 +144,16 @@ def _practice_scores(lines: list[str]) -> dict[str, tuple[int, str]]:
 
 
 def _keyword_pattern(word: str) -> str:
-    # Short keywords (ai, wan, mfa) must match whole words; longer ones are stems (migrat, certif).
-    tail = r"\b" if len(word) <= 4 else ""
+    # Short keywords (ai, wan, site) must match whole words, allowing a plural; longer ones are stems.
+    tail = r"s?\b" if len(word) <= 4 else ""
     return rf"\b{re.escape(word)}{tail}"
 
 
 def _service_for(practice: str, text: str) -> str:
+    lowered = text.lower()
+    for service in SERVICES_BY_KEY.values():  # a service the partner asked for by name wins
+        if service.practice == practice and service.name.lower() in lowered:
+            return service.key
     for pattern, key in SERVICE_HINTS:
         if SERVICES_BY_KEY[key].practice == practice and re.search(pattern, text, re.IGNORECASE):
             return key
@@ -168,6 +176,10 @@ def extract_discovery(notes: str, partner_name: str = "The partner") -> Discover
 
     found: dict[str, tuple[str, str]] = {}
     for field, rules in BANT_RULES.items():
+        negated = _first_match(NEGATIONS[field], lines) if field in NEGATIONS else ""
+        if negated:  # "no budget yet" is evidence that budget is unknown, not that it exists
+            found[field] = ("unknown", negated)
+            continue
         for level, pattern in rules:
             quote = _first_match(pattern, lines)
             if quote:
@@ -202,13 +214,13 @@ def extract_discovery(notes: str, partner_name: str = "The partner") -> Discover
     elif found["need"][0] != "unknown" and known >= 3:
         next_step = (
             f"Route to the {PRACTICES[top.practice]} specialist and book a scoping call for the "
-            f"{SERVICES_BY_KEY[top.service_key].name.lower()}."
+            f"{inline(SERVICES_BY_KEY[top.service_key].name)}."
         )
     else:
         next_step = "Book a 20-minute follow-up to confirm " + ", ".join(missing) + "."
 
     headline = challenges[0].point if challenges else f"{partner_name} shared early context without a specific problem."
-    fit = f" Strongest fit: {PRACTICES[top.practice]} ({SERVICES_BY_KEY[top.service_key].name.lower()})." if top else ""
+    fit = f" Strongest fit: {PRACTICES[top.practice]} ({inline(SERVICES_BY_KEY[top.service_key].name)})." if top else ""
     summary = f"{headline}{fit} {known} of 4 BANT elements are evidenced in the notes."
 
     return DiscoveryExtraction(
@@ -218,11 +230,15 @@ def extract_discovery(notes: str, partner_name: str = "The partner") -> Discover
         challenges=challenges,
         practices=practices,
         bant=bant,
-        missing_information=[f"{field.title()} not discussed" for field in missing],
+        missing_information=[_missing_text(field, found[field][1]) for field in missing],
         follow_up_questions=questions[:5],
         risks=risks,
         next_step=next_step,
     )
+
+
+def _missing_text(field: str, quote: str) -> str:
+    return f"{field.title()} came up but is not known yet" if quote else f"{field.title()} not discussed"
 
 
 def _as_point(line: str) -> str:
@@ -230,6 +246,10 @@ def _as_point(line: str) -> str:
         r"^(they|she|he|we|customer|client)\s+(said|mentioned|noted)\s+(that\s+)?", "", line, flags=re.IGNORECASE
     )
     return (line[:1].upper() + line[1:]).rstrip(".") + "."
+
+
+def possessive(name: str) -> str:
+    return f"{name}'" if name.endswith("s") else f"{name}'s"
 
 
 @dataclass
@@ -252,29 +272,31 @@ def draft_outreach(ctx: OutreachContext) -> OutreachDraft:
     service = SERVICES_BY_KEY[ctx.service_key]
     practice = PRACTICES[ctx.practice]
     who = ctx.end_customer or "your customer"
+    first_word, _, rest = service.summary.partition(" ")
+    summary_mid = f"{inline(first_word)} {rest}"  # the summary, continuing a sentence
     notes: list[PersonalizationNote] = []
     if ctx.goal == "intro":
-        subject = f"Idea for {ctx.partner_name}: {service.name.lower()}"
+        subject = f"Idea for {ctx.partner_name}: {inline(service.name)}"
         opening = (
             f"I was looking at your recent activity and one item stood out: \u201c{ctx.signal_title}.\u201d"
             if ctx.signal_title
-            else f"I've been looking at where {ctx.partner_name} is growing in {practice.lower()}."
+            else f"I've been looking at where {ctx.partner_name} is growing in {inline(practice)}."
         )
         if ctx.signal_title:
             notes.append(PersonalizationNote(element="Opening line", reason=f"Prospect signal: {ctx.signal_title}"))
         middle = (
-            f"Partners in a similar spot often start with a {service.name.lower()} "
-            f"({service.duration}): {service.summary[0].lower() + service.summary[1:]} "
+            f"Partners in a similar spot often start with the {inline(service.name)} "
+            f"({service.duration}): {summary_mid} "
             "It gives you something concrete to bring to the customer without committing to a large project."
         )
         ask = "Would a 15-minute call this week be useful to see whether it fits any of your accounts?"
     elif ctx.goal == "follow_up":
         subject = f"Following up: {service.name} for {who}"
-        opening = f"Thanks again for walking me through {who}'s situation."
+        opening = f"Thanks again for walking me through {possessive(who)} situation."
         if ctx.challenge:
             opening += f" What stood out was: “{ctx.challenge.rstrip('.')}.”"
             notes.append(PersonalizationNote(element="Recap", reason="Customer challenge recorded on the opportunity"))
-        middle = f"Based on that, a {service.name.lower()} looks like the right first step. {service.summary}"
+        middle = f"Based on that, the {inline(service.name)} looks like the right first step. It covers {summary_mid}"
         ask = "Could you confirm the budget range and who else should be part of the next conversation?"
     elif ctx.goal == "meeting":
         subject = f"Bringing in a specialist for {who}"
@@ -284,13 +306,13 @@ def draft_outreach(ctx: OutreachContext) -> OutreachDraft:
         if ctx.specialist:
             notes.append(PersonalizationNote(element="Specialist introduction", reason=f"Routed to {ctx.specialist}"))
         middle = (
-            f"They have delivered the {service.name.lower()} for similar customers and can answer the "
+            f"They have delivered the {inline(service.name)} for similar customers and can answer the "
             "technical questions directly, so you are not relaying details back and forth."
         )
         ask = "Do Tuesday or Thursday afternoon work for a 30-minute scoping call?"
     else:  # reengage
         subject = f"Still a priority for {who}?"
-        opening = f"It's been a little while since we spoke about {service.name.lower()} for {who}."
+        opening = f"It's been a little while since we spoke about the {inline(service.name)} for {who}."
         middle = (
             "If priorities have shifted, that's completely fine. If it's still on the list, I can send a "
             "short summary of what the first two weeks would look like so it's easy to take to the customer."

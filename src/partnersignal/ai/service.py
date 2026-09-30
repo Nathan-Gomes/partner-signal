@@ -10,10 +10,10 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict, deque
-from datetime import date
 
 import anthropic
 
+from .. import clock
 from ..config import Settings
 from . import local
 from .claude import ClaudeEngine, EngineUnavailable
@@ -27,12 +27,12 @@ class RateLimiter:
     def __init__(self, per_hour: int, per_day: int):
         self.per_hour, self.per_day = per_hour, per_day
         self.hits: dict[str, deque[float]] = defaultdict(deque)
-        self.day, self.day_count = date.today(), 0
+        self.day, self.day_count = clock.today(), 0
 
     def allow(self, visitor: str) -> bool:
         now = time.time()
-        if date.today() != self.day:
-            self.day, self.day_count = date.today(), 0
+        if clock.today() != self.day:
+            self.day, self.day_count = clock.today(), 0
         window = self.hits[visitor]
         while window and now - window[0] > 3600:
             window.popleft()

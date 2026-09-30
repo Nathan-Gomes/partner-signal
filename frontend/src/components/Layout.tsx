@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { CASE_STUDY } from "./Welcome";
 import { api, type Health, type TodayView } from "../api";
 import { useToast } from "./ui";
 
@@ -63,13 +64,17 @@ export function Layout() {
             <span className={`pulse ${health.data?.ai.live_model_available ? "on" : ""}`} aria-hidden />
             {health.data
               ? health.data.ai.live_model_available
-                ? `AI assist: Claude (${health.data.ai.model})`
-                : "AI assist: local rules engine"
+                ? `AI drafting: Claude (${health.data.ai.model})`
+                : "AI drafting: built-in rules engine"
               : "Connecting…"}
           </p>
-          <p className="fine">
-            Fictional demo data. Drafts are never sent automatically.
-          </p>
+          <p className="fine">Fictional demo data. Drafts are never sent automatically.</p>
+          <a className="side-link" href={CASE_STUDY} target="_blank" rel="noreferrer">
+            About this project
+          </a>
+          <Link className="side-link" to="/?intro=1" onClick={() => setOpen(false)}>
+            Show the intro
+          </Link>
           <button className="link-button" onClick={reset}>
             Reset demo data
           </button>

@@ -9,6 +9,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+PROPER_NOUNS = {"Copilot", "Microsoft", "Azure", "AWS", "Windows"}
+
+
+def inline(name: str) -> str:
+    """A catalog name for use mid-sentence: ordinary words lowercased; acronyms (SD-WAN, AI, VMware) and
+    product names (Copilot) kept."""
+    return " ".join(
+        w if sum(ch.isupper() for ch in w) >= 2 or w in PROPER_NOUNS else w.lower() for w in name.split(" ")
+    )
+
+
 PRACTICES: dict[str, str] = {
     "security": "Cybersecurity",
     "cloud": "Cloud & hybrid IT",
@@ -328,6 +339,11 @@ PLAYBOOKS: dict[str, Playbook] = {
             "remote access": 3,
             "vpn": 3,
             "branch": 3,
+            "connection": 3,
+            "scanner": 3,
+            "coverage": 3,
+            "dead zone": 4,
+            "access point": 4,
         },
     ),
     "ai": Playbook(

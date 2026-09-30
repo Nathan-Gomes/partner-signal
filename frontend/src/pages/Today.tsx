@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api, type QueueItem, type TodayView } from "../api";
 import { type ComposerTarget, OutreachComposer } from "../components/OutreachComposer";
 import { BandTag, DueTag, ErrorState, Loading, PageHeader, PracticeTag } from "../components/ui";
+import { Welcome } from "../components/Welcome";
 import { cadShort, parseDay, relativeTime } from "../format";
 
 const KIND_HINT: Record<QueueItem["kind"], string> = {
@@ -33,6 +34,8 @@ export function Today() {
           </>
         }
       />
+
+      <Welcome topOpportunityId={data.queue.find((q) => q.opportunity_id)?.opportunity_id ?? null} />
 
       <section className="day-sheet" aria-label="This week">
         <div className="day-goal">

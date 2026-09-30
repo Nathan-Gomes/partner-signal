@@ -65,7 +65,11 @@ export function OutreachComposer({ target, onClose }: { target: ComposerTarget; 
     mutationFn: () => api.post<Draft>(`/api/drafts/${result!.draft.id}/approve`, { subject, body }),
     onSuccess: async () => {
       await client.invalidateQueries();
-      toast(`Logged the e-mail to ${target.partnerName}. Next follow-up date set.`);
+      toast(
+        target.opportunityId
+          ? `Logged the e-mail to ${target.partnerName}. Next follow-up date set from the stage cadence.`
+          : `Logged the e-mail to ${target.partnerName}. The signal is marked as worked.`,
+      );
       close();
     },
   });

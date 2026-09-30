@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     ai_calls_per_day: int = 300
     max_note_chars: int = 6000
     reseed_on_start: bool = True
+    # The demo's dates ("due today", "overdue") are relative to the day it was seeded; reseed when the
+    # local date changes so a long-running instance never shows yesterday's "today".
+    reseed_daily: bool = True
+    timezone: str = "America/Toronto"
     commit: str = "local"
 
 

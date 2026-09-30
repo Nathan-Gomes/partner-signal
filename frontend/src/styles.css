@@ -211,6 +211,20 @@ input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent
 .reason-list { margin-top: 2px; color: var(--ink-2); font-size: 13.5px; }
 .reason-list li::before { content: "– "; color: var(--muted); }
 
+/* ---------- welcome ---------- */
+.welcome { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 28px; margin-bottom: 26px; padding: 22px 24px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--action); border-radius: var(--radius-m); }
+.welcome h2 { font-size: 20px; letter-spacing: -0.01em; }
+.welcome-text p { margin-top: 8px; color: var(--ink-2); max-width: 60ch; }
+.welcome-links { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; font-weight: 600; }
+.welcome-steps { display: grid; gap: 8px; counter-reset: step; }
+.welcome-steps li { counter-increment: step; }
+.welcome-steps a { display: grid; grid-template-columns: 30px 1fr; column-gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-s); color: var(--ink); text-decoration: none; }
+.welcome-steps a::before { content: counter(step); grid-row: span 2; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--action-tint); color: var(--action); font-weight: 750; font-size: 13px; }
+.welcome-steps a:hover { border-color: var(--action); }
+.welcome-steps strong { font-size: 15px; }
+.welcome-steps span { color: var(--ink-2); font-size: 13.5px; }
+.side-link { color: #8fd3cc; font-size: 12.5px; }
+
 /* ---------- today ---------- */
 .day-sheet {
   display: grid; grid-template-columns: minmax(240px, 1.2fr) 2fr; gap: 28px; align-items: center;
@@ -446,7 +460,7 @@ blockquote { margin: 4px 0 0 24px; padding-left: 10px; border-left: 3px solid #e
 
 /* ---------- responsive ---------- */
 @media (max-width: 1080px) {
-  .two-col, .two-col.even, .capture { grid-template-columns: 1fr; }
+  .two-col, .two-col.even, .capture, .welcome { grid-template-columns: 1fr; }
   .day-sheet { grid-template-columns: 1fr; }
   .playbook-grid { grid-template-columns: 1fr 1fr; }
   .profile-facts, .report-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }

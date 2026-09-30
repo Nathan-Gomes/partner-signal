@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 import io
 import os
-from datetime import date, datetime
+from datetime import date
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -13,12 +13,14 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from .. import clock
 from ..ai.local import OutreachContext
 from ..ai.service import Assistant
 from ..catalog import BANT_LEVELS, PLAYBOOKS, PRACTICES, SERVICES, SERVICES_BY_KEY, STAGES
 from ..config import get_settings
-from ..db import get_session
+from ..db import SessionLocal, get_session
 from ..models import Draft, Signal, Specialist
+from ..seed import seed
 from ..services import workflow as wf
 from ..services.scoring import GateError
 
@@ -30,8 +32,17 @@ Timeline = Literal["unknown", "6_plus_months", "3_6_months", "under_3_months"]
 Engine = Literal["auto", "claude", "local"]
 
 
-def today() -> date:
-    return date.today()
+def today(request: Request) -> date:
+    """The demo's current date. Reseeds the fictional data once the local date has moved on."""
+    current = clock.today()
+    state = request.app.state
+    if get_settings().reseed_daily and getattr(state, "seeded_on", current) != current:
+        with state.seed_lock:
+            if state.seeded_on != current:
+                with SessionLocal() as session:
+                    seed(session, current)
+                state.seeded_on = current
+    return current
 
 
 def assistant(request: Request) -> Assistant:
@@ -333,7 +344,7 @@ def outreach(body: OutreachRequest, request: Request, session: Session = Depends
         original_body=result.body,
         personalization=[n.model_dump() for n in result.personalization],
         engine=meta.engine,
-        created_at=datetime.now(),
+        created_at=clock.now(),
     )
     session.add(draft)
     session.commit()

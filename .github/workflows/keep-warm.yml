@@ -1,0 +1,16 @@
+name: Keep demo warm
+
+# Render's free tier sleeps after 15 idle minutes and takes ~30 s to wake. Ping the demo every
+# 10 minutes on weekdays, 07:00-20:00 Toronto time (11:00-00:00 UTC), so it is awake when someone
+# opens it, without running all month.
+on:
+  schedule:
+    - cron: "*/10 11-23 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: curl -fsS -m 90 https://partner-signal-arm6.onrender.com/api/health

@@ -56,3 +56,21 @@ def test_concise_tone_is_shorter():
     assert len(draft_outreach(OutreachContext(**base, tone="concise")).body) < len(
         draft_outreach(OutreachContext(**base)).body
     )
+
+
+def test_negated_budget_is_unknown_with_evidence():
+    notes = "Their customer Northern Grain Co-op keeps losing Wi-Fi in the warehouse. No budget number yet."
+    result = extract_discovery(notes, "Prairie")
+    assert result.bant.budget.level == "unknown"
+    assert result.bant.budget.quote == "No budget number yet."
+    assert "Budget came up but is not known yet" in result.missing_information
+
+
+def test_short_keywords_match_plurals():
+    result = extract_discovery("The customer is opening two new sites and scanners drop their connection.", "P")
+    assert result.practices and result.practices[0].practice == "network"
+
+
+def test_service_named_in_the_notes_wins():
+    notes = "The COO wants a packaged AI readiness workshop to resell. Worried about sensitive data in AI tools."
+    assert extract_discovery(notes, "Granite").practices[0].service_key == "ai-readiness"
