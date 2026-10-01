@@ -66,6 +66,8 @@ Guard rails:
 
 ## Run locally
 
+Prerequisites: Python 3.10+ and Node.js 22.12+.
+
 ```bash
 # API
 python -m venv .venv
