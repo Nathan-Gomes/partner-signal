@@ -385,6 +385,11 @@ def convert_signal(session: Session, signal_id: int, today: date, end_customer: 
     signal = session.get(Signal, signal_id)
     if signal is None:
         raise NotFound(f"Signal {signal_id} not found.")
+    existing = session.scalars(
+        select(Opportunity).where(Opportunity.signal_id == signal_id).order_by(Opportunity.id)
+    ).first()
+    if existing is not None:
+        return existing
     service = SERVICES_BY_KEY[signal.service_key]
     opp = Opportunity(
         partner_id=signal.partner_id,

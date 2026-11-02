@@ -81,11 +81,23 @@ def test_signal_to_outreach_to_logged_email(client):
     assert "edited before sending" in partner["activities"][0]["summary"]
 
 
-def test_convert_signal_opens_prospect(client):
+def test_convert_signal_opens_one_prospect_and_is_idempotent(client):
     signal = client.get("/api/signals", params={"status": "new"}).json()[0]
-    opp_id = client.post(f"/api/signals/{signal['id']}/convert", json={}).json()["opportunity_id"]
+    before = len(client.get("/api/opportunities").json())
+    first = client.post(f"/api/signals/{signal['id']}/convert", json={})
+    second = client.post(f"/api/signals/{signal['id']}/convert", json={})
+
+    opp_id = first.json()["opportunity_id"]
     opp = client.get(f"/api/opportunities/{opp_id}").json()
+    conversion_notes = [
+        activity for activity in opp["activities"] if activity["summary"].startswith("Opportunity opened from signal:")
+    ]
+
+    assert first.status_code == second.status_code == 200
+    assert second.json()["opportunity_id"] == opp_id
+    assert len(client.get("/api/opportunities").json()) == before + 1
     assert opp["stage"] == "Prospect" and opp["signal"]["id"] == signal["id"]
+    assert len(conversion_notes) == 1
 
 
 def test_discovery_then_create_opportunity(client):
