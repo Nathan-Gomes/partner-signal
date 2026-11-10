@@ -61,7 +61,7 @@ Guard rails:
 | API | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2.0 (SQLite by default; any SQLAlchemy URL) |
 | AI | Anthropic Claude API with structured outputs, deterministic fallback engine, rate limiting |
 | Front end | React 18, TypeScript, Vite, TanStack Query, React Router |
-| Quality | pytest (92% coverage), Vitest and Testing Library, Ruff, mypy, TypeScript strict mode |
+| Quality | pytest (90%+ coverage), Vitest and Testing Library, Ruff, mypy, TypeScript strict mode |
 | Delivery | Multi-stage Docker build, GitHub Actions (lint, type-check, tests, image smoke test), Render |
 
 ## Run locally

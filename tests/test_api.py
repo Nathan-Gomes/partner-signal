@@ -45,6 +45,23 @@ def test_qualify_route_and_advance(client):
     assert "HANDOFF" in moved["handoff"]["text"]
 
 
+def test_reopening_won_opportunity_clears_close_metadata_and_reports(client):
+    won = first_open(client, "Won")
+    before = client.get("/api/reports").json()
+
+    response = client.post(f"/api/opportunities/{won['id']}/stage", json={"stage": "Discovery"})
+
+    assert response.status_code == 200
+    reopened = response.json()
+    assert reopened["stage"] == "Discovery"
+    assert reopened["close_reason"] == ""
+    assert reopened["next_step_due"] == (clock.today() + timedelta(days=3)).isoformat()
+
+    after = client.get("/api/reports").json()
+    assert after["closed_count"] == before["closed_count"] - 1
+    assert after["won_count"] == before["won_count"] - 1
+
+
 def test_logging_a_touch_sets_the_next_follow_up_from_the_stage_cadence(client):
     opp = first_open(client, "Proposal")
     client.post(

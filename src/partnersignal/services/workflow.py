@@ -556,6 +556,9 @@ def change_stage(session: Session, opp_id: int, stage: str, today: date, reason:
     if stage in ("Won", "Lost"):
         opp.closed_on, opp.close_reason, opp.next_step, opp.next_step_due = today, reason, "", None
     else:
+        # Reopening a closed opportunity must remove it from closed-period
+        # reporting and discard the reason that belonged to the old outcome.
+        opp.closed_on, opp.close_reason = None, ""
         opp.next_step_due = today + timedelta(days=STAGE_CADENCE[stage])
     session.add(
         Activity(
