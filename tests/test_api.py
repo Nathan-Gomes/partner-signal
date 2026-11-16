@@ -78,6 +78,26 @@ def test_logging_a_touch_sets_the_next_follow_up_from_the_stage_cadence(client):
     assert detail["next_step_due"] == (clock.today() + timedelta(days=2)).isoformat()
 
 
+def test_logging_a_touch_rejects_an_opportunity_from_another_partner(client):
+    opp = first_open(client, "Proposal")
+    other_partner = next(p for p in client.get("/api/partners").json() if p["id"] != opp["partner_id"])
+    before = len(client.get(f"/api/opportunities/{opp['id']}").json()["activities"])
+
+    response = client.post(
+        "/api/activities",
+        json={
+            "partner_id": other_partner["id"],
+            "opportunity_id": opp["id"],
+            "kind": "call",
+            "summary": "Reviewed the proposal",
+        },
+    )
+
+    assert response.status_code == 409
+    assert "belongs to partner" in response.json()["detail"]
+    assert len(client.get(f"/api/opportunities/{opp['id']}").json()["activities"]) == before
+
+
 def test_signal_to_outreach_to_logged_email(client):
     signal = client.get("/api/signals", params={"status": "new"}).json()[0]
     created = client.post(

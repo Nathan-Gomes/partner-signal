@@ -273,6 +273,8 @@ def create_activity(body: NewActivity, session: Session = Depends(get_session), 
         activity = wf.log_activity(session, day, **body.model_dump())
     except wf.NotFound as error:
         raise not_found(error) from error
+    except wf.AssociationConflict as error:
+        raise HTTPException(409, str(error)) from error
     return {"id": activity.id}
 
 

@@ -32,6 +32,10 @@ class NotFound(LookupError):
     pass
 
 
+class AssociationConflict(ValueError):
+    pass
+
+
 # ---------- helpers ----------
 
 
@@ -606,6 +610,13 @@ def log_activity(
     next_step_due: date | None = None,
 ) -> Activity:
     get_partner(session, partner_id)
+    opp = None
+    if opportunity_id is not None:
+        opp = get_opportunity(session, opportunity_id)
+        if opp.partner_id != partner_id:
+            raise AssociationConflict(
+                f"Opportunity {opportunity_id} belongs to partner '{opp.partner_id}', not '{partner_id}'."
+            )
     activity = Activity(
         partner_id=partner_id,
         opportunity_id=opportunity_id,
@@ -615,8 +626,7 @@ def log_activity(
         occurred_at=clock.now(),
     )
     session.add(activity)
-    if opportunity_id is not None:
-        opp = get_opportunity(session, opportunity_id)
+    if opp is not None:
         if next_step:
             opp.next_step = next_step
         # Follow-up discipline: every logged touch sets the next due date from the stage cadence
