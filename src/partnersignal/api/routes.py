@@ -19,7 +19,7 @@ from ..ai.service import Assistant
 from ..catalog import BANT_LEVELS, PLAYBOOKS, PRACTICES, SERVICES, SERVICES_BY_KEY, STAGES
 from ..config import get_settings
 from ..db import SessionLocal, get_session
-from ..models import Draft, Signal, Specialist
+from ..models import Draft, Specialist
 from ..seed import seed
 from ..services import workflow as wf
 from ..services.scoring import GateError
@@ -317,10 +317,24 @@ class OutreachRequest(BaseModel):
 def outreach(body: OutreachRequest, request: Request, session: Session = Depends(get_session)) -> dict:
     try:
         partner = wf.get_partner(session, body.partner_id)
-        opp = wf.get_opportunity(session, body.opportunity_id) if body.opportunity_id else None
+        opp = wf.get_opportunity(session, body.opportunity_id) if body.opportunity_id is not None else None
+        signal = (
+            wf.get_signal(session, body.signal_id)
+            if body.signal_id is not None
+            else (wf.opp_signal(opp) if opp else None)
+        )
+        if opp is not None and opp.partner_id != partner.id:
+            raise wf.AssociationConflict(
+                f"Opportunity {opp.id} belongs to partner '{opp.partner_id}', not '{partner.id}'."
+            )
+        if signal is not None and signal.partner_id != partner.id:
+            raise wf.AssociationConflict(
+                f"Signal {signal.id} belongs to partner '{signal.partner_id}', not '{partner.id}'."
+            )
     except wf.NotFound as error:
         raise not_found(error) from error
-    signal = session.get(Signal, body.signal_id) if body.signal_id else (wf.opp_signal(opp) if opp else None)
+    except wf.AssociationConflict as error:
+        raise HTTPException(409, str(error)) from error
     service_key = opp.service_key if opp else signal.service_key if signal else "ai-readiness"
     ctx = OutreachContext(
         goal=body.goal,

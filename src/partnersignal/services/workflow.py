@@ -124,6 +124,13 @@ def get_partner(session: Session, partner_id: str) -> Partner:
     return partner
 
 
+def get_signal(session: Session, signal_id: int) -> Signal:
+    signal = session.get(Signal, signal_id)
+    if signal is None:
+        raise NotFound(f"Signal {signal_id} not found.")
+    return signal
+
+
 def signal_score(signal: Signal, today: date) -> int:
     score = signal.strength * 12
     if signal.deadline:

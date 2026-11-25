@@ -118,6 +118,38 @@ def test_signal_to_outreach_to_logged_email(client):
     assert "edited before sending" in partner["activities"][0]["summary"]
 
 
+def test_outreach_rejects_context_from_another_partner(client):
+    signal = client.get("/api/signals", params={"status": "new"}).json()[0]
+    opportunity = first_open(client, "Proposal")
+
+    for context, record_partner_id in (
+        ({"signal_id": signal["id"]}, signal["partner_id"]),
+        ({"opportunity_id": opportunity["id"]}, opportunity["partner_id"]),
+    ):
+        other_partner = next(
+            partner for partner in client.get("/api/partners").json() if partner["id"] != record_partner_id
+        )
+        response = client.post(
+            "/api/ai/outreach",
+            json={"partner_id": other_partner["id"], "engine": "local", **context},
+        )
+
+        assert response.status_code == 409
+        assert "belongs to partner" in response.json()["detail"]
+
+
+def test_outreach_rejects_unknown_signal(client):
+    partner = client.get("/api/partners").json()[0]
+
+    response = client.post(
+        "/api/ai/outreach",
+        json={"partner_id": partner["id"], "signal_id": 999_999, "engine": "local"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Signal 999999 not found."
+
+
 def test_convert_signal_opens_one_prospect_and_is_idempotent(client):
     signal = client.get("/api/signals", params={"status": "new"}).json()[0]
     before = len(client.get("/api/opportunities").json())
